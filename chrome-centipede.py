@@ -52,10 +52,10 @@ class ChromeInterface:
     
     def inject(self, url: str, script: str) -> str:
         ws = create_connection(url)
-        ws.send({
+        ws.send(json.dumps({
             "id": 1,
             "method": "Security.disable"
-        }) # disable tracking security state changes
+        })) # disable tracking security state changes
         ws.recv()
         ws.send(json.dumps({
             "id": 1,
