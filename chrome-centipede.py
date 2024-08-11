@@ -22,34 +22,47 @@ class ChromeInterface:
     def ws_urls(self) -> List[str]:
         return [item['webSocketDebuggerUrl'] for item in self.info]
     
-    @property
-    def pages(self, type: str = None) -> List[dict]:
+    def _pages(self, type: str = None) -> List[dict]:
         if type:
             return [item for item in self.info if item['type'] == type]
         else:
             return [item for item in self.info if item['type'] == 'page']
     
     @property
+    def pages(self, type: str = None) -> List[dict]:
+        return self._pages()
+    
+    @property
     def tabs(self) -> List[dict]:
-        return self.get_pages('tab')
+        return self._pages('tab')
     
     @property
     def extensions(self) -> List[dict]:
-        return self.get_ages('extension')
+        return self._pages('extension')
     
-    def cookie(self, url: str) -> dict:
+    def cookie(self, url: str) -> List[dict]:
         ws = create_connection(url)
         ws.send('{"id": 1, "method": "Network.getAllCookies"}')
         response = ws.recv()
         ws.close()
-        return json.loads(response)
+        return json.loads(response)['result']['cookies']
     
-    @property
-    def cookies(self) -> dict:
-        return [self.get_cookies(url) for url in self.get_ws_urls()]
+    def cookies(self) -> List[List[dict]]:
+        return [self.cookie(url) for url in self.ws_urls]
 
 if __name__ == '__main__':
+    # Launch the browser with the following command: $browser_exe --remote-debugging-port=9223 --user-data-dir=$user_data_dir --restore-last-session --allow-remote-origins=*
+    # User data dirs: https://chromium.googlesource.com/chromium/src.git/+/HEAD/docs/user_data_dir.md#Default-Location
     chrome = ChromeInterface(9223)
-    print(chrome.tabs())
-    urls = chrome.ws_urls()
-    print(chrome.cookies(urls[0]))    
+    for page in chrome.pages:
+        print(f"Type: {page['type']}")
+        print(f"URL: {page['url']}")
+        print(f"Title: {page['title']}")
+        print('\n')
+    urls = chrome.ws_urls
+    for cookie in chrome.cookie(urls[0]):
+        for k, v in cookie.items():
+            fields = ['name', 'value', 'domain', 'path', 'expires', 'httpOnly', 'secure', 'session', 'sameSite']
+            if k in fields:
+                print(f"{k}: {v}")
+        print('\n')
