@@ -11,6 +11,7 @@ So far I've implemented the following functionality:
 - Get all open tabs/extensions
 - Get the cookies for any open page
 - Inject arbitrary JS into any page (doesn't work on Edge)
+- Get navigation history for a page
 
 Planned future features:
 
